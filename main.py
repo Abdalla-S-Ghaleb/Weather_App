@@ -145,7 +145,6 @@ def play(screen, input_box, button, font, city_name):
         pygame.display.flip()
 
 
-
 def main():
     screen = initialize_screen()
 
