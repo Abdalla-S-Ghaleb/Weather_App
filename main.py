@@ -1,7 +1,5 @@
 from Weather import *
 
-API_key = '3b2461f40913894931f208451ae8e549'
-
 
 def main():
     screen = initialize_screen()

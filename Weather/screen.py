@@ -1,5 +1,4 @@
-import pygame
-from data import *
+from .data import *
 
 def initialize_screen():
     pygame.init()

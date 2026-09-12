@@ -1,2 +1,2 @@
-from data import *
-from screen import *
+from .data import *
+from .screen import *

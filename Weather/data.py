@@ -2,6 +2,7 @@ import requests
 from io import BytesIO
 import pygame
 
+API_key = '3b2461f40913894931f208451ae8e549'
 
 def get_data(city_name):
     url = f'https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={API_key}'
