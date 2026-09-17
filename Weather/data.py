@@ -1,6 +1,5 @@
 import requests
-from io import BytesIO
-import pygame
+
 
 API_key = '3b2461f40913894931f208451ae8e549'
 
@@ -14,14 +13,13 @@ def get_data(city_name):
     return response.json()
 
 
-def load_icon(icon_code):
-    url = f"https://openweathermap.org/img/wn/{icon_code}@2x.png"
-
-    response = requests.get(url)
-
-    if response.status_code != 200:
-        print("Failed to download icon:", response.status_code)
-        return None
-
-    image = pygame.image.load(BytesIO(response.content))
-    return image.convert_alpha()
+# def load_icon(icon_code):
+#     url = f"https://openweathermap.org/img/wn/{icon_code}@2x.png"
+#
+#     response = requests.get(url)
+#
+#     if response.status_code != 200:
+#         print("Failed to download icon:", response.status_code)
+#         return None
+#
+#     return image.convert_alpha()

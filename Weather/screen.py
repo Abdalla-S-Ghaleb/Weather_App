@@ -1,117 +1,172 @@
-from .data import *
+import tkinter as tk
 
-def initialize_screen():
-    pygame.init()
-
-    screen = pygame.display.set_mode((450, 500))
-    pygame.display.set_caption("Weather App")
-
-    return screen
+from Weather import get_data
 
 
-def display(screen, weather, temp, icon):
-    font = pygame.font.Font(None, 40)
+class Screen:
+    BEIGE = "#F3E9D2"
+    DARK = "#3D342B"
+    BROWN = "#7A5C3E"
+    LIGHT_BROWN = "#A98B6F"
+    WHITE = "#FFFDF8"
+    ERROR = "#FF2C2C"
 
-    weather_text = font.render(weather, True, "black")
-    temp_text = font.render(f"{temp:.1f}°C", True, "black")
+    def __init__(self):
+        self.window = tk.Tk()
 
-    if icon is not None:
-        screen.blit(icon, (170, 150))
+        self.setup_window()
+        self.create_top_section()
+        self.create_weather_section()
+        self.create_bottom_section()
+        self.setup_bindings()
 
-    screen.blit(weather_text, (150, 270))
-    screen.blit(temp_text, (180, 310))
+    def setup_window(self):
+        self.window.title("Weather App")
+        self.window.geometry("600x800")
+        self.window.resizable(False, False)
+        self.window.configure(bg=self.BEIGE)
 
+    def create_top_section(self):
+        top_frame = tk.Frame(
+            self.window,
+            bg=self.BEIGE
+        )
+        top_frame.pack(side="top", pady=50)
 
-def play(screen, input_box, button, font, city_name):
-    active = False
+        title_label = tk.Label(
+            top_frame,
+            text="Enter the city name",
+            font=("Arial", 26, "bold"),
+            fg=self.DARK,
+            bg=self.BEIGE
+        )
+        title_label.pack(pady=(0, 20))
 
-    weather = None
-    temp = None
-    icon = None
-    error = None
+        self.city_entry = tk.Entry(
+            top_frame,
+            font=("Arial", 18),
+            fg=self.DARK,
+            bg=self.WHITE,
+            insertbackground=self.DARK,
+            justify="center",
+            relief="flat",
+            bd=0,
+            width=28
+        )
+        self.city_entry.pack(ipady=14)
 
-    while True:
-        for event in pygame.event.get():
+        self.city_entry.focus()
 
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
+    def create_weather_section(self):
+        self.weather_frame = tk.Frame(
+            self.window,
+            bg=self.BEIGE
+        )
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+        self.weather_label = tk.Label(
+            self.weather_frame,
+            text="",
+            font=("Arial", 24, "bold"),
+            fg=self.DARK,
+            bg=self.WHITE,
+            width=25,
+            height=6,
+            relief="flat"
+        )
+        self.weather_label.pack()
 
-                if input_box.collidepoint(event.pos):
-                    active = True
-                else:
-                    active = False
+        self.clear_button = tk.Button(
+            self.weather_frame,
+            text="Clear",
+            command=self.clear_weather,
+            font=("Arial", 12, "bold"),
+            fg=self.WHITE,
+            bg=self.BROWN,
+            activebackground=self.LIGHT_BROWN,
+            activeforeground=self.WHITE,
+            relief="flat",
+            bd=0,
+            padx=30,
+            pady=10,
+            cursor="hand2"
+        )
 
-                if button.collidepoint(event.pos):
+    def create_bottom_section(self):
+        bottom_frame = tk.Frame(
+            self.window,
+            bg=self.BEIGE
+        )
+        bottom_frame.pack(side="bottom", pady=45)
 
-                    if city_name.strip():
+        enter_label = tk.Label(
+            bottom_frame,
+            text="Press Enter to show the weather there",
+            font=("Arial", 13),
+            fg=self.BROWN,
+            bg=self.BEIGE
+        )
+        enter_label.pack(pady=5)
 
-                        data = get_data(city_name.strip())
+        escape_label = tk.Label(
+            bottom_frame,
+            text="Press Escape to exit",
+            font=("Arial", 12),
+            fg=self.LIGHT_BROWN,
+            bg=self.BEIGE
+        )
+        escape_label.pack(pady=5)
 
-                        if data is not None:
+    def setup_bindings(self):
+        self.window.bind("<Return>", self.show_weather)
+        self.window.bind("<Escape>", self.exit_program)
 
-                            weather = data['weather'][0]['description']
-                            temp = data['main']['temp'] - 273.15
-                            icon_code = data['weather'][0]['icon']
+    def show_weather(self, event=None):
+        city = self.city_entry.get().strip()
 
-                            icon = load_icon(icon_code)
+        if not city:
+            return
 
-                            error = None
+        data = get_data(city)
+        print(f"\nrequesting {city} data...\n")
+        print("_"*20)
 
-                        else:
-                            weather = None
-                            temp = None
-                            icon = None
-                            error = "City not found"
+        if data:
+            self.display_weather(city, data)
+            print(f"\nreceived the data successfully :)\n")
+            print("_" * 20)
 
-            if event.type == pygame.KEYDOWN:
+        else:
+            self.show_error()
+            print(f"\nSomething went wrong :(\n")
+            print("_" * 20)
 
-                if active:
+        self.show_weather_section()
 
-                    if event.key == pygame.K_BACKSPACE:
-                        city_name = city_name[:-1]
+    def display_weather(self, city, data):
+        temp = data["main"]["temp"] - 273.15
+        description = data["weather"][0]["description"]
 
-                    elif event.key == pygame.K_RETURN:
-                        if city_name.strip():
+        self.weather_label.config(
+            text=f"Weather in {city}\n\n"
+                 f"{temp:.0f}°C  •  {description}",
+            fg=self.DARK
+        )
 
-                            data = get_data(city_name.strip())
+    def show_error(self):
+        self.weather_label.config(
+            text="Please enter a valid city name",
+            fg=self.ERROR
+        )
 
-                            if data is not None:
+    def show_weather_section(self):
+        self.weather_frame.pack(expand=True)
+        self.clear_button.pack(pady=(15, 0))
 
-                                weather = data['weather'][0]['description']
-                                temp = data['main']['temp'] - 273.15
+    def clear_weather(self):
+        self.weather_frame.pack_forget()
 
-                                icon_code = data['weather'][0]['icon']
-                                icon = load_icon(icon_code)
+    def exit_program(self, event=None):
+        self.window.destroy()
 
-                                error = None
-
-                            else:
-                                error = "City not found"
-
-                    else:
-                        city_name += event.unicode
-
-        screen.fill("gray")
-
-        pygame.draw.rect(screen, "lightgray", input_box)
-        pygame.draw.rect(screen, "black", input_box, 2)
-
-        text_surface = font.render(city_name, True, "black")
-        screen.blit(text_surface, (input_box.x + 10, input_box.y + 10))
-
-        pygame.draw.rect(screen, "gray", button)
-
-        button_text = font.render("Search", True, "white")
-        screen.blit(button_text, (button.x + 15, button.y + 10))
-
-        if weather is not None:
-            display(screen, weather, temp, icon)
-
-        if error is not None:
-            error_text = font.render(error, True, "red")
-            screen.blit(error_text, (170, 350))
-
-        pygame.display.flip()
+    def run(self):
+        self.window.mainloop()
